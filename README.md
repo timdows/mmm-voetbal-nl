@@ -1,2 +1,61 @@
-# mmm-voetbal-nl
+# MMM-voetbal-nl
+
+MagicMirror² module die uitslagen van jouw voetbal.nl-team(s) toont.
+
+## Installatie
+
+1. Kopieer deze map naar `~/MagicMirror/modules/MMM-voetbal-nl`
+2. Voer `npm install` uit in de modulemap
+3. Voeg het blok hieronder toe aan `config/config.js`
+
+```js
+{
+  module: "MMM-voetbal-nl",
+  position: "top_right",
+  config: {
+    maxMatches: null,      // null = alles tonen, of zet een getal
+    updateInterval: 3600000,
+    teamName: "Bilt De FC MO15-2",
+    teamId: "T707686914",
+    email: "jouwemail@voorbeeld.nl",
+    password: "jouwwachtwoord"
+  }
+}
+```
+
+Je kunt ook meerdere teams instellen:
+
+```js
+config: {
+  teams: [
+    { name: "Bilt De FC MO15-2", teamId: "T707686914" },
+    { name: "Tweede Team", teamId: "T123456789" }
+  ],
+  email: "jouwemail@voorbeeld.nl",
+  password: "jouwwachtwoord"
+}
+```
+
+`teamId` is voldoende. De module bouwt zelf de juiste voetbal.nl uitslagen-URL.
+
+Let op: inloggegevens in `config/config.js` zijn leesbaar op het systeem waar MagicMirror draait.
+
+## Lokaal testen
+
+1. Kopieer `local_testing/credentials.example.js` naar `local_testing/credentials.js` en vul je gegevens in
+2. Gebruik `teamName` + `teamId` (bijv. `T707686914`), of meerdere teams via `teams`
+3. Start de testserver: `npm test`
+4. Open http://localhost:3456 in je browser
+
+`local_testing/credentials.js` staat in `.gitignore` en wordt nooit meegestuurd naar git.
+
+## API koppelen
+
+De scraper:
+- schakelt automatisch naar `data-button-switch="my_team"`
+- klikt op `Toon alle uitslagen`
+- leest alle seizoenen uit de dropdown (`ScheduleResults-viewSelectTrigger`)
+
+Voor lokaal testen komen inloggegevens en teamconfiguratie uit `local_testing/credentials.js`.
+In de MagicMirror-omgeving komen ze uit `config/config.js`.
 

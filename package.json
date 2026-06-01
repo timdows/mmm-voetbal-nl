@@ -1,0 +1,21 @@
+{
+  "name": "mmm-voetbal-nl",
+  "version": "1.0.0",
+  "description": "MagicMirror² module: toont komende Nederlandse voetbalwedstrijden",
+  "main": "node_helper.js",
+  "scripts": {
+    "test": "node local_testing/test-server.js"
+  },
+  "keywords": [
+    "magicmirror",
+    "voetbal",
+    "football",
+    "eredivisie"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "node-fetch": "^2.7.0",
+    "puppeteer": "^25.1.0"
+  }
+}
