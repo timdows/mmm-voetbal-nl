@@ -1,4 +1,4 @@
-Module.register("MMM-voetbal-nl", {
+Module.register("mmm-voetbal-nl", {
   defaults: {
     updateInterval: 60 * 60 * 1000, // elk uur verversen
     maxMatches: 10,
@@ -37,12 +37,31 @@ Module.register("MMM-voetbal-nl", {
     if (notification === "MATCHES_RESULT") {
       const data = Array.isArray(payload) ? { matches: payload } : payload || {};
       this.matches = Array.isArray(data.matches) ? data.matches : [];
+      if (typeof data.lastSuccessfulSyncAt === "number") {
+        this.lastSuccessfulSyncAt = data.lastSuccessfulSyncAt;
+      }
+      if (typeof data.usedCache === "boolean") {
+        this.usedCache = data.usedCache;
+      }
+      if (typeof data.staleCache === "boolean") {
+        this.staleCache = data.staleCache;
+      }
+      if (data.error !== undefined) {
+        this.syncError = data.error ? String(data.error) : null;
+      }
+      this.loaded = true;
+      this.updateDom();
+    }
+
+    if (notification === "MATCHES_META") {
+      const data = payload || {};
       this.lastSuccessfulSyncAt = typeof data.lastSuccessfulSyncAt === "number" ? data.lastSuccessfulSyncAt : null;
       this.usedCache = Boolean(data.usedCache);
       this.staleCache = Boolean(data.staleCache);
       this.syncError = data.error ? String(data.error) : null;
-      this.loaded = true;
-      this.updateDom();
+      if (this.loaded) {
+        this.updateDom();
+      }
     }
   },
 
@@ -157,6 +176,6 @@ Module.register("MMM-voetbal-nl", {
   },
 
   getStyles() {
-    return ["MMM-voetbal-nl.css"];
+    return ["mmm-voetbal-nl.css"];
   },
 });

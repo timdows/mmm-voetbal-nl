@@ -247,15 +247,18 @@ module.exports = NodeHelper.create({
   },
 
   sendMatchesResult(matches, metadata = {}) {
-    this.sendSocketNotification("MATCHES_RESULT", {
-      matches,
+    const normalizedMetadata = {
       lastSuccessfulSyncAt: metadata.lastSuccessfulSyncAt || null,
       cacheUpdatedAt: metadata.cacheUpdatedAt || null,
       usedCache: Boolean(metadata.usedCache),
       staleCache: Boolean(metadata.staleCache),
       dailyUpdateTime: normalizeDailyUpdateTime(metadata.dailyUpdateTime),
       error: metadata.error || null,
-    });
+    };
+
+    // Keep MATCHES_RESULT as an array for backward compatibility with older module frontends.
+    this.sendSocketNotification("MATCHES_RESULT", matches);
+    this.sendSocketNotification("MATCHES_META", normalizedMetadata);
   },
 
   async scrapeMatches(maxMatches, runtimeConfig) {

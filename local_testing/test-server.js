@@ -524,7 +524,7 @@ function renderHtml(matches, metadata = {}) {
   <title>MMM-voetbal-nl – Test</title>
   <style>
     body { background:#000; color:#fff; font-family:Arial,sans-serif; display:flex; justify-content:center; padding:40px; margin:0; }
-    ${fs.readFileSync(path.join(__dirname, "..", "MMM-voetbal-nl.css"), "utf8")}
+    ${fs.readFileSync(path.join(__dirname, "..", "mmm-voetbal-nl.css"), "utf8")}
     .meta { color:#555; font-size:0.75em; margin-top:20px; }
   </style>
 </head>
