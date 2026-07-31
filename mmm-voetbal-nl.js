@@ -16,6 +16,8 @@ Module.register("mmm-voetbal-nl", {
     this.usedCache = false;
     this.staleCache = false;
     this.syncError = null;
+    this.loginAttempted = false;
+    this.loginSuccessful = null;
     this.loaded = false;
     this.getData();
     setInterval(() => this.getData(), this.config.updateInterval);
@@ -49,6 +51,12 @@ Module.register("mmm-voetbal-nl", {
       if (data.error !== undefined) {
         this.syncError = data.error ? String(data.error) : null;
       }
+      if (typeof data.loginAttempted === "boolean") {
+        this.loginAttempted = data.loginAttempted;
+      }
+      if (typeof data.loginSuccessful === "boolean" || data.loginSuccessful === null) {
+        this.loginSuccessful = data.loginSuccessful;
+      }
       this.loaded = true;
       this.updateDom();
     }
@@ -59,10 +67,19 @@ Module.register("mmm-voetbal-nl", {
       this.usedCache = Boolean(data.usedCache);
       this.staleCache = Boolean(data.staleCache);
       this.syncError = data.error ? String(data.error) : null;
+      this.loginAttempted = Boolean(data.loginAttempted);
+      this.loginSuccessful = typeof data.loginSuccessful === "boolean" ? data.loginSuccessful : null;
       if (this.loaded) {
         this.updateDom();
       }
     }
+  },
+
+  getLoginStatusText() {
+    if (!this.loginAttempted) return "Inloggen: niet gebruikt";
+    if (this.loginSuccessful === true) return "Inloggen: gelukt";
+    if (this.loginSuccessful === false) return "Inloggen: mislukt";
+    return "Inloggen: onbekend";
   },
 
   formatSyncTimestamp() {
@@ -79,6 +96,11 @@ Module.register("mmm-voetbal-nl", {
     const syncSource = this.staleCache ? "oude cache" : this.usedCache ? "cache" : "live";
     syncMeta.innerText = `Laatst succesvol gesynced: ${this.formatSyncTimestamp()} (${syncSource})`;
     wrapper.appendChild(syncMeta);
+
+    const loginMeta = document.createElement("div");
+    loginMeta.className = "voetbal-login-meta dimmed xsmall";
+    loginMeta.innerText = this.getLoginStatusText();
+    wrapper.appendChild(loginMeta);
 
     if (this.syncError) {
       const errorMeta = document.createElement("div");

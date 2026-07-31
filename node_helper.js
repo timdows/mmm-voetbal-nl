@@ -74,7 +74,7 @@ function readCache() {
   return null;
 }
 
-function writeCache(matches, dailyUpdateTime, nowTs = Date.now()) {
+function writeCache(matches, dailyUpdateTime, nowTs = Date.now(), metadata = {}) {
   try {
     fs.writeFileSync(
       CACHE_FILE,
@@ -83,6 +83,8 @@ function writeCache(matches, dailyUpdateTime, nowTs = Date.now()) {
           cachedAt: nowTs,
           lastSuccessfulSyncAt: nowTs,
           dailyUpdateTime: normalizeDailyUpdateTime(dailyUpdateTime),
+          loginAttempted: Boolean(metadata.loginAttempted),
+          loginSuccessful: typeof metadata.loginSuccessful === "boolean" ? metadata.loginSuccessful : null,
           matches,
         },
         null,
@@ -91,6 +93,12 @@ function writeCache(matches, dailyUpdateTime, nowTs = Date.now()) {
       "utf8"
     );
   } catch (_) {}
+}
+
+function didLoginSucceed(currentUrl, hasEmailField) {
+  if (hasEmailField) return false;
+  const normalizedUrl = String(currentUrl || "").toLowerCase();
+  return !normalizedUrl.includes("/inloggen");
 }
 
 function maskEmail(email) {
@@ -253,6 +261,8 @@ module.exports = NodeHelper.create({
       usedCache: Boolean(metadata.usedCache),
       staleCache: Boolean(metadata.staleCache),
       dailyUpdateTime: normalizeDailyUpdateTime(metadata.dailyUpdateTime),
+      loginAttempted: Boolean(metadata.loginAttempted),
+      loginSuccessful: typeof metadata.loginSuccessful === "boolean" ? metadata.loginSuccessful : null,
       error: metadata.error || null,
     };
 
@@ -273,11 +283,15 @@ module.exports = NodeHelper.create({
         cacheUpdatedAt: cached.cachedAt,
         usedCache: true,
         dailyUpdateTime,
+        loginAttempted: Boolean(cached.loginAttempted),
+        loginSuccessful: typeof cached.loginSuccessful === "boolean" ? cached.loginSuccessful : null,
       });
       return;
     }
 
     let browser;
+    let loginAttempted = false;
+    let loginSuccessful = null;
     try {
       browser = await puppeteer.launch({
         headless: true,
@@ -289,6 +303,7 @@ module.exports = NodeHelper.create({
       );
 
       if (activeCredentials.email && activeCredentials.password) {
+        loginAttempted = true;
         await page.goto(LOGIN_URL, { waitUntil: "networkidle2", timeout: 20000 });
         await page.type('input[name="email"]', activeCredentials.email);
         await page.type('input[name="password"]', activeCredentials.password);
@@ -301,6 +316,16 @@ module.exports = NodeHelper.create({
             form.submit();
           }),
         ]);
+
+        const postLoginState = await page.evaluate(() => ({
+          url: window.location.href,
+          hasEmailField: Boolean(document.querySelector('input[name="email"]')),
+        }));
+        loginSuccessful = didLoginSucceed(postLoginState.url, postLoginState.hasEmailField);
+        if (!loginSuccessful) {
+          throw new Error("Inloggen mislukt: controleer email/wachtwoord");
+        }
+
         console.log("[MMM-voetbal-nl] Ingelogd als", maskEmail(activeCredentials.email));
       }
 
@@ -320,7 +345,7 @@ module.exports = NodeHelper.create({
       const deduped = this.dedupeMatches(allMatches);
       const sorted = this.limitMatches(deduped, null);
       const syncTimestamp = Date.now();
-      writeCache(sorted, dailyUpdateTime, syncTimestamp);
+      writeCache(sorted, dailyUpdateTime, syncTimestamp, { loginAttempted, loginSuccessful });
       console.log("[MMM-voetbal-nl] Cache opgeslagen (", sorted.length, "wedstrijden)");
       const matches = this.limitMatches(sorted, maxMatches);
       this.sendMatchesResult(matches, {
@@ -328,6 +353,8 @@ module.exports = NodeHelper.create({
         cacheUpdatedAt: syncTimestamp,
         usedCache: false,
         dailyUpdateTime,
+        loginAttempted,
+        loginSuccessful,
       });
     } catch (err) {
       console.error("[MMM-voetbal-nl] Fout bij scrapen:", err.message);
@@ -340,11 +367,21 @@ module.exports = NodeHelper.create({
           usedCache: true,
           staleCache: true,
           dailyUpdateTime,
+          loginAttempted:
+            loginAttempted || Boolean(cached.loginAttempted) || Boolean(activeCredentials.email && activeCredentials.password),
+          loginSuccessful:
+            typeof loginSuccessful === "boolean"
+              ? loginSuccessful
+              : typeof cached.loginSuccessful === "boolean"
+                ? cached.loginSuccessful
+                : null,
           error: err.message,
         });
       } else {
         this.sendMatchesResult([], {
           dailyUpdateTime,
+          loginAttempted: loginAttempted || Boolean(activeCredentials.email && activeCredentials.password),
+          loginSuccessful,
           error: err.message,
         });
       }
