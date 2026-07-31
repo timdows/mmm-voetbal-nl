@@ -1,10 +1,10 @@
-.mmm-voetbalnl {
+.mmm-voetbal-nl {
   font-family: inherit;
   text-align: left;
   min-width: 300px;
 }
 
-.mmm-voetbalnl .voetbal-title {
+.mmm-voetbal-nl .voetbal-title {
   font-size: 0.85em;
   font-weight: bold;
   text-transform: uppercase;
@@ -15,13 +15,13 @@
   padding-bottom: 4px;
 }
 
-.mmm-voetbalnl .voetbal-list {
+.mmm-voetbal-nl .voetbal-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.mmm-voetbalnl .voetbal-match {
+.mmm-voetbal-nl .voetbal-match {
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
@@ -29,45 +29,45 @@
   border-bottom: 1px solid #222;
 }
 
-.mmm-voetbalnl .voetbal-match:last-child {
+.mmm-voetbal-nl .voetbal-match:last-child {
   border-bottom: none;
   margin-bottom: 0;
 }
 
-.mmm-voetbalnl .voetbal-date {
+.mmm-voetbal-nl .voetbal-date {
   font-size: 0.7em;
   color: #777;
   margin-bottom: 4px;
 }
 
-.mmm-voetbalnl .voetbal-score-row {
+.mmm-voetbal-nl .voetbal-score-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.mmm-voetbalnl .voetbal-team {
+.mmm-voetbal-nl .voetbal-team {
   flex: 1;
   font-size: 0.9em;
   color: #ddd;
 }
 
-.mmm-voetbalnl .voetbal-team--home {
+.mmm-voetbal-nl .voetbal-team--home {
   text-align: right;
 }
 
-.mmm-voetbalnl .voetbal-team--away {
+.mmm-voetbal-nl .voetbal-team--away {
   text-align: left;
 }
 
-.mmm-voetbalnl .voetbal-score-center {
+.mmm-voetbal-nl .voetbal-score-center {
   display: flex;
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
 }
 
-.mmm-voetbalnl .voetbal-team-logo {
+.mmm-voetbal-nl .voetbal-team-logo {
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -76,7 +76,7 @@
   flex-shrink: 0;
 }
 
-.mmm-voetbalnl .voetbal-score {
+.mmm-voetbal-nl .voetbal-score {
   font-size: 1em;
   font-weight: bold;
   color: #fff;
@@ -88,31 +88,31 @@
 }
 
 /* Kleurcodering uitslag */
-.mmm-voetbalnl .voetbal-match--win .voetbal-score {
+.mmm-voetbal-nl .voetbal-match--win .voetbal-score {
   color: #4caf50;
 }
 
-.mmm-voetbalnl .voetbal-match--loss .voetbal-score {
+.mmm-voetbal-nl .voetbal-match--loss .voetbal-score {
   color: #f44336;
 }
 
-.mmm-voetbalnl .voetbal-match--draw .voetbal-score {
+.mmm-voetbal-nl .voetbal-match--draw .voetbal-score {
   color: #ff9800;
 }
 
-.mmm-voetbalnl .voetbal-sync-meta {
+.mmm-voetbal-nl .voetbal-sync-meta {
   margin-top: 10px;
   padding-top: 6px;
   border-top: 1px solid #222;
   color: #777;
 }
 
-.mmm-voetbalnl .voetbal-login-meta {
+.mmm-voetbal-nl .voetbal-login-meta {
   margin-top: 4px;
   color: #777;
 }
 
-.mmm-voetbalnl .voetbal-sync-error {
+.mmm-voetbal-nl .voetbal-sync-error {
   margin-top: 4px;
   color: #a35a5a;
 }

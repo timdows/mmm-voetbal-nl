@@ -1,5 +1,5 @@
 /**
- * Lokale testserver voor MMM-voetbalnl
+ * Lokale testserver voor MMM-voetbal-nl
  * Start met: npm test
  * Open dan: http://localhost:3456
  */
@@ -521,16 +521,16 @@ function renderHtml(matches, metadata = {}) {
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>MMM-voetbalnl – Test</title>
+  <title>MMM-voetbal-nl – Test</title>
   <style>
     body { background:#000; color:#fff; font-family:Arial,sans-serif; display:flex; justify-content:center; padding:40px; margin:0; }
-    ${fs.readFileSync(path.join(__dirname, "..", "MMM-voetbalnl.css"), "utf8")}
+    ${fs.readFileSync(path.join(__dirname, "..", "MMM-voetbal-nl.css"), "utf8")}
     .meta { color:#555; font-size:0.75em; margin-top:20px; }
   </style>
 </head>
 <body>
   <div>
-    <div class="mmm-voetbalnl">
+    <div class="mmm-voetbal-nl">
       <div class="voetbal-title">Laatste Uitslagen – Bilt De FC MO15-2</div>
       <ul class="voetbal-list">${rows}</ul>
       <div class="voetbal-sync-meta dimmed xsmall">${syncStatus}</div>

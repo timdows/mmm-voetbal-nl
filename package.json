@@ -1,5 +1,5 @@
 {
-  "name": "mmm-voetbalnl",
+  "name": "mmm-voetbal-nl",
   "version": "1.0.0",
   "description": "MagicMirror² module: toont komende Nederlandse voetbalwedstrijden",
   "main": "node_helper.js",
