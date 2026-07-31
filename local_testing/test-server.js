@@ -16,7 +16,7 @@ const LOGIN_URL = "https://www.voetbal.nl/inloggen";
 const DEFAULT_TEAM_NAME = "Bilt De FC MO15-2";
 const PORT = 3456;
 const CACHE_FILE = path.join(__dirname, "cache.json");
-  const DEFAULT_DAILY_UPDATE_TIME = "13:00"; // Updated to reflect new naming
+  const DEFAULT_DAILY_UPDATE_TIME = "13:00";
 const DEFAULT_MAX_MATCHES = 10;
 
 function normalizeDailyUpdateTime(value) {
@@ -530,7 +530,7 @@ function renderHtml(matches, metadata = {}) {
 </head>
 <body>
   <div>
-    <div class="mmm-voetbal-nl">
+    <div class="mmm-voetbalnl">
       <div class="voetbal-title">Laatste Uitslagen – Bilt De FC MO15-2</div>
       <ul class="voetbal-list">${rows}</ul>
       <div class="voetbal-sync-meta dimmed xsmall">${syncStatus}</div>
