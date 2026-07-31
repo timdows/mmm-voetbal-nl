@@ -1,4 +1,4 @@
-Module.register("mmm-voetbal-nl", {
+Module.register("MMM-voetbal-nl", {
   defaults: {
     updateInterval: 60 * 60 * 1000, // elk uur verversen
     maxMatches: 10,
