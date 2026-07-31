@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MMM-voetbal-nl – Lokale test</title>
+  <title>MMM-voetbalnl – Lokale test</title>
   <style>
     body {
       background-color: #000;
@@ -16,14 +16,14 @@
       margin: 0;
     }
 
-    /* === Module stijlen (kopie van MMM-voetbal-nl.css) === */
-    .mmm-voetbal-nl {
+    /* === Module stijlen (kopie van MMM-voetbalnl.css) === */
+    .mmm-voetbalnl {
       font-family: inherit;
       text-align: left;
       min-width: 260px;
     }
 
-    .mmm-voetbal-nl .voetbal-title {
+    .mmm-voetbalnl .voetbal-title {
       font-size: 1em;
       font-weight: bold;
       text-transform: uppercase;
@@ -34,13 +34,13 @@
       padding-bottom: 4px;
     }
 
-    .mmm-voetbal-nl .voetbal-list {
+    .mmm-voetbalnl .voetbal-list {
       list-style: none;
       margin: 0;
       padding: 0;
     }
 
-    .mmm-voetbal-nl .voetbal-match {
+    .mmm-voetbalnl .voetbal-match {
       display: flex;
       flex-direction: column;
       margin-bottom: 12px;
@@ -48,24 +48,24 @@
       border-bottom: 1px solid #2a2a2a;
     }
 
-    .mmm-voetbal-nl .voetbal-match:last-child {
+    .mmm-voetbalnl .voetbal-match:last-child {
       border-bottom: none;
       margin-bottom: 0;
     }
 
-    .mmm-voetbal-nl .voetbal-date {
+    .mmm-voetbalnl .voetbal-date {
       font-size: 0.75em;
       color: #888;
       margin-bottom: 2px;
     }
 
-    .mmm-voetbal-nl .voetbal-teams {
+    .mmm-voetbalnl .voetbal-teams {
       font-size: 1em;
       color: #fff;
       font-weight: bold;
     }
 
-    .mmm-voetbal-nl .voetbal-competition {
+    .mmm-voetbalnl .voetbal-competition {
       font-size: 0.7em;
       color: #666;
       margin-top: 2px;
@@ -78,7 +78,7 @@
   <div id="module-output"></div>
 
   <script>
-    // Mock-data: zelfde als in MMM-voetbal-nl.js
+    // Mock-data: zelfde als in MMM-voetbalnl.js
     const matches = [
       {
         homeTeam: "Ajax",
@@ -105,7 +105,7 @@
 
     function renderModule(matches) {
       const wrapper = document.createElement("div");
-      wrapper.className = "mmm-voetbal-nl";
+      wrapper.className = "mmm-voetbalnl";
 
       const title = document.createElement("div");
       title.className = "voetbal-title";

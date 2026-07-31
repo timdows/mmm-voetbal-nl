@@ -1,5 +1,5 @@
 /**
- * Lokale testserver voor MMM-voetbal-nl
+ * Lokale testserver voor MMM-voetbalnl
  * Start met: npm test
  * Open dan: http://localhost:3456
  */
@@ -16,7 +16,7 @@ const LOGIN_URL = "https://www.voetbal.nl/inloggen";
 const DEFAULT_TEAM_NAME = "Bilt De FC MO15-2";
 const PORT = 3456;
 const CACHE_FILE = path.join(__dirname, "cache.json");
-const DEFAULT_DAILY_UPDATE_TIME = "13:00";
+  const DEFAULT_DAILY_UPDATE_TIME = "13:00"; // Updated to reflect new naming
 const DEFAULT_MAX_MATCHES = 10;
 
 function normalizeDailyUpdateTime(value) {
@@ -517,14 +517,14 @@ function renderHtml(matches, metadata = {}) {
   const syncSource = staleCache ? "oude cache" : usedCache ? "cache" : "live";
   const syncStatus = `Laatst succesvol gesynced: ${formatSyncTimestamp(lastSuccessfulSyncAt)} (${syncSource})`;
 
-  return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>MMM-voetbal-nl – Test</title>
+  <title>MMM-voetbalnl – Test</title>
   <style>
     body { background:#000; color:#fff; font-family:Arial,sans-serif; display:flex; justify-content:center; padding:40px; margin:0; }
-    ${fs.readFileSync(path.join(__dirname, "..", "mmm-voetbal-nl.css"), "utf8")}
+    ${fs.readFileSync(path.join(__dirname, "..", "MMM-voetbalnl.css"), "utf8")}
     .meta { color:#555; font-size:0.75em; margin-top:20px; }
   </style>
 </head>

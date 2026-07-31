@@ -1,16 +1,16 @@
-# MMM-voetbal-nl
+# MMM-voetbalnl
 
 MagicMirror² module die uitslagen van jouw voetbal.nl-team(s) toont.
 
 ## Installatie
 
-1. Kopieer deze map naar `~/MagicMirror/modules/mmm-voetbal-nl`
+1. Kopieer deze map naar `~/MagicMirror/modules/MMM-voetbalnl`
 2. Voer `npm install` uit in de modulemap
 3. Voeg het blok hieronder toe aan `config/config.js`
 
 ```js
 {
-  module: "mmm-voetbal-nl",
+  module: "MMM-voetbalnl",
   position: "top_right",
   config: {
     maxMatches: 10,        // standaard: laatste 10 wedstrijden

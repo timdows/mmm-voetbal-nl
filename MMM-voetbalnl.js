@@ -1,4 +1,4 @@
-Module.register("mmm-voetbal-nl", {
+Module.register("MMM-voetbalnl", {
   defaults: {
     updateInterval: 60 * 60 * 1000, // elk uur verversen
     maxMatches: 10,
@@ -112,7 +112,7 @@ Module.register("mmm-voetbal-nl", {
 
   getDom() {
     const wrapper = document.createElement("div");
-    wrapper.className = "mmm-voetbal-nl";
+    wrapper.className = "mmm-voetbalnl";
 
     const title = document.createElement("div");
     title.className = "voetbal-title";
@@ -198,6 +198,6 @@ Module.register("mmm-voetbal-nl", {
   },
 
   getStyles() {
-    return ["mmm-voetbal-nl.css"];
+    return ["MMM-voetbalnl.css"];
   },
 });

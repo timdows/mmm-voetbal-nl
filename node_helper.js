@@ -245,7 +245,7 @@ function extractBackgroundImage(value) {
 
 module.exports = NodeHelper.create({
   start() {
-    console.log("[MMM-voetbal-nl] Node helper gestart");
+    console.log("[MMM-voetbalnl] Node helper gestart");
   },
 
   socketNotificationReceived(notification, payload) {
@@ -276,7 +276,7 @@ module.exports = NodeHelper.create({
     const dailyUpdateTime = normalizeDailyUpdateTime(activeCredentials.dailyUpdateTime);
     const cached = readCache();
     if (cached && isCacheValid(cached.cachedAt, dailyUpdateTime)) {
-      console.log("[MMM-voetbal-nl] Cache gebruikt (" + new Date(cached.cachedAt).toLocaleString("nl-NL") + ")");
+      console.log("[MMM-voetbalnl] Cache gebruikt (" + new Date(cached.cachedAt).toLocaleString("nl-NL") + ")");
       const matches = this.limitMatches(cached.matches, maxMatches);
       this.sendMatchesResult(matches, {
         lastSuccessfulSyncAt: cached.lastSuccessfulSyncAt || cached.cachedAt,
@@ -326,7 +326,7 @@ module.exports = NodeHelper.create({
           throw new Error("Inloggen mislukt: controleer email/wachtwoord");
         }
 
-        console.log("[MMM-voetbal-nl] Ingelogd als", maskEmail(activeCredentials.email));
+        console.log("[MMM-voetbalnl] Ingelogd als", maskEmail(activeCredentials.email));
       }
 
       const teams = getConfiguredTeams(activeCredentials);
@@ -346,7 +346,7 @@ module.exports = NodeHelper.create({
       const sorted = this.limitMatches(deduped, null);
       const syncTimestamp = Date.now();
       writeCache(sorted, dailyUpdateTime, syncTimestamp, { loginAttempted, loginSuccessful });
-      console.log("[MMM-voetbal-nl] Cache opgeslagen (", sorted.length, "wedstrijden)");
+      console.log("[MMM-voetbalnl] Cache opgeslagen (", sorted.length, "wedstrijden)");
       const matches = this.limitMatches(sorted, maxMatches);
       this.sendMatchesResult(matches, {
         lastSuccessfulSyncAt: syncTimestamp,
@@ -357,9 +357,9 @@ module.exports = NodeHelper.create({
         loginSuccessful,
       });
     } catch (err) {
-      console.error("[MMM-voetbal-nl] Fout bij scrapen:", err.message);
+      console.error("[MMM-voetbalnl] Fout bij scrapen:", err.message);
       if (cached && Array.isArray(cached.matches) && cached.matches.length > 0) {
-        console.log("[MMM-voetbal-nl] Fallback naar bestaande cache na scrape-fout");
+        console.log("[MMM-voetbalnl] Fallback naar bestaande cache na scrape-fout");
         const matches = this.limitMatches(cached.matches, maxMatches);
         this.sendMatchesResult(matches, {
           lastSuccessfulSyncAt: cached.lastSuccessfulSyncAt || cached.cachedAt,
