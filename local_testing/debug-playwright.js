@@ -1,19 +1,20 @@
-const puppeteer = require("puppeteer");
+const { chromium } = require("playwright");
 const cheerio = require("cheerio");
 
 (async () => {
-  const browser = await puppeteer.launch({
+  const browser = await chromium.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
-  const page = await browser.newPage();
-  await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-  );
+  const context = await browser.newContext({
+    userAgent:
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  });
+  const page = await context.newPage();
 
   console.log("Navigating...");
   await page.goto("https://www.voetbal.nl/team/T707686914/uitslagen", {
-    waitUntil: "networkidle2",
+    waitUntil: "networkidle",
     timeout: 30000,
   });
 

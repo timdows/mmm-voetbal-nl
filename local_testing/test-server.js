@@ -8,7 +8,7 @@ const http = require("http");
 const path = require("path");
 const fs = require("fs");
 const cheerio = require("cheerio");
-const puppeteer = require("puppeteer");
+const { chromium } = require("playwright");
 
 const DEFAULT_TEAM_ID = "T707686914";
 const DEFAULT_RESULTS_URL = `https://www.voetbal.nl/team/${DEFAULT_TEAM_ID}/uitslagen`;
@@ -306,7 +306,7 @@ async function switchToMyTeamView(page) {
   });
 
   if (clicked) {
-    await page.waitForNetworkIdle({ idleTime: 500, timeout: 7000 }).catch(() => null);
+    await page.waitForLoadState("networkidle", { timeout: 7000 }).catch(() => null);
     await sleep(300);
   }
 }
@@ -393,7 +393,7 @@ async function expandAllResults(page) {
 
     if (!clicked) break;
 
-    await page.waitForNetworkIdle({ idleTime: 500, timeout: 7000 }).catch(() => null);
+    await page.waitForLoadState("networkidle", { timeout: 7000 }).catch(() => null);
     await sleep(350);
   }
 }
@@ -406,7 +406,7 @@ async function collectSeasonSnapshots(page) {
 
   const seasonUrls = await getSeasonOptions(page);
   for (const seasonUrl of seasonUrls) {
-    await page.goto(seasonUrl, { waitUntil: "networkidle2", timeout: 30000 });
+    await page.goto(seasonUrl, { waitUntil: "networkidle", timeout: 30000 });
     await switchToMyTeamView(page);
     await expandAllResults(page);
     snapshots.push(await page.content());
@@ -435,23 +435,24 @@ function sortMatchesNewestFirst(matches) {
 }
 
 async function scrapeMatches(maxMatches = null) {
-  const browser = await puppeteer.launch({
+  const browser = await chromium.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   });
 
   try {
-    const page = await browser.newPage();
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-    );
+    const context = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    });
+    const page = await context.newPage();
 
     if (credentials.email && credentials.password) {
-      await page.goto(LOGIN_URL, { waitUntil: "networkidle2", timeout: 20000 });
+      await page.goto(LOGIN_URL, { waitUntil: "networkidle", timeout: 20000 });
       await page.type('input[name="email"]', credentials.email);
       await page.type('input[name="password"]', credentials.password);
       await Promise.all([
-        page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => null),
+        page.waitForNavigation({ waitUntil: "networkidle", timeout: 20000 }).catch(() => null),
         page.evaluate(() => {
           const emailInput = document.querySelector('input[name="email"]');
           const form = emailInput?.form || document.querySelector("form");
@@ -466,7 +467,7 @@ async function scrapeMatches(maxMatches = null) {
     const allMatches = [];
 
     for (const team of teams) {
-      await page.goto(team.resultsUrl, { waitUntil: "networkidle2", timeout: 30000 });
+      await page.goto(team.resultsUrl, { waitUntil: "networkidle", timeout: 30000 });
       await switchToMyTeamView(page);
       const snapshots = await collectSeasonSnapshots(page);
 

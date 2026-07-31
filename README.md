@@ -8,6 +8,17 @@ MagicMirror² module die uitslagen van jouw voetbal.nl-team(s) toont.
 2. Voer `npm install` uit in de modulemap
 3. Voeg het blok hieronder toe aan `config/config.js`
 
+Als je de module met git hebt opgehaald, gebruik dan deze stappen:
+
+```bash
+cd ~/MagicMirror/modules
+git clone <jouw-repo-url> MMM-voetbal-nl
+cd MMM-voetbal-nl
+npm install
+```
+
+`npm install` is verplicht na `git clone`. Zonder dependencies (zoals `playwright` en `cheerio`) start `node_helper.js` niet.
+
 ```js
 {
   module: "MMM-voetbal-nl",
@@ -70,4 +81,8 @@ In de MagicMirror-omgeving komen ze uit `config/config.js`.
 - Er wordt pas opnieuw van voetbal.nl opgehaald na de ingestelde dagelijkse sync-tijd.
 - Standaard is dat `13:00`; aanpasbaar met `dailyUpdateTime` in `HH:mm` formaat.
 - Onderaan de module zie je wanneer voor het laatst succesvol is gesynced.
+
+## Troubleshooting
+
+- Geen logs van `MMM-voetbal-nl` zichtbaar? Controleer eerst of je in de modulemap `npm install` hebt uitgevoerd.
 
