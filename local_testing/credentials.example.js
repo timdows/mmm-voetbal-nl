@@ -5,6 +5,10 @@
 module.exports = {
   email: "jouwemail@voorbeeld.nl",
   password: "jouwwachtwoord",
+  // Optioneel: maximaal aantal recente wedstrijden in local test-output
+  maxMatches: 10,
+  // Optioneel: dagelijkse sync-grens (HH:mm), standaard 13:00
+  dailyUpdateTime: "13:00",
   // Optie 1: een enkel team
   teamName: "Bilt De FC MO15-2",
   teamId: "T707686914",

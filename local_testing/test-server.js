@@ -16,13 +16,52 @@ const LOGIN_URL = "https://www.voetbal.nl/inloggen";
 const DEFAULT_TEAM_NAME = "Bilt De FC MO15-2";
 const PORT = 3456;
 const CACHE_FILE = path.join(__dirname, "cache.json");
+const DEFAULT_DAILY_UPDATE_TIME = "13:00";
+const DEFAULT_MAX_MATCHES = 10;
 
-function isCacheValid(cachedAt) {
-  const now = Date.now();
-  const d = new Date();
-  const todayNoon = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0).getTime();
-  const lastNoon = now < todayNoon ? todayNoon - 86400000 : todayNoon;
-  return cachedAt >= lastNoon;
+function normalizeDailyUpdateTime(value) {
+  const raw = String(value || "").trim();
+  const match = raw.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+  if (!match) return DEFAULT_DAILY_UPDATE_TIME;
+
+  const hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2] || "0", 10);
+  if (Number.isNaN(hour) || Number.isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return DEFAULT_DAILY_UPDATE_TIME;
+  }
+
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function parseDailyUpdateTime(value) {
+  const normalized = normalizeDailyUpdateTime(value);
+  const [hourPart, minutePart] = normalized.split(":");
+  return {
+    hour: parseInt(hourPart, 10),
+    minute: parseInt(minutePart, 10),
+    normalized,
+  };
+}
+
+function getLastRefreshBoundary(nowTs, dailyUpdateTime) {
+  const { hour, minute } = parseDailyUpdateTime(dailyUpdateTime);
+  const nowDate = new Date(nowTs);
+  const todayBoundary = new Date(
+    nowDate.getFullYear(),
+    nowDate.getMonth(),
+    nowDate.getDate(),
+    hour,
+    minute,
+    0,
+    0
+  ).getTime();
+
+  return nowTs < todayBoundary ? todayBoundary - 86400000 : todayBoundary;
+}
+
+function isCacheValid(cachedAt, dailyUpdateTime, nowTs = Date.now()) {
+  const lastBoundary = getLastRefreshBoundary(nowTs, dailyUpdateTime);
+  return cachedAt >= lastBoundary;
 }
 
 function readCache() {
@@ -34,9 +73,23 @@ function readCache() {
   return null;
 }
 
-function writeCache(matches) {
+function writeCache(matches, dailyUpdateTime, nowTs = Date.now()) {
   try {
-    fs.writeFileSync(CACHE_FILE, JSON.stringify({ cachedAt: Date.now(), matches }, null, 2), "utf8");
+    fs.writeFileSync(
+      CACHE_FILE,
+      JSON.stringify(
+        {
+          cachedAt: nowTs,
+          lastSuccessfulSyncAt: nowTs,
+          dailyUpdateTime: normalizeDailyUpdateTime(dailyUpdateTime),
+          maxMatches: getConfiguredMaxMatches(),
+          matches,
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
   } catch (_) {}
 }
 
@@ -49,6 +102,24 @@ function maskEmail(email) {
   const [name, domain] = String(email).split("@");
   if (!name || !domain) return "***";
   return `${name.slice(0, 2)}***@${domain}`;
+}
+
+function getConfiguredDailyUpdateTime() {
+  return normalizeDailyUpdateTime(credentials.dailyUpdateTime || DEFAULT_DAILY_UPDATE_TIME);
+}
+
+function getConfiguredMaxMatches() {
+  const parsed = parseInt(credentials.maxMatches, 10);
+  if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+  return DEFAULT_MAX_MATCHES;
+}
+
+function formatSyncTimestamp(ts) {
+  if (!ts) return "onbekend";
+  return new Intl.DateTimeFormat("nl-NL", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(ts));
 }
 
 function sleep(ms) {
@@ -416,7 +487,13 @@ async function scrapeMatches(maxMatches = null) {
   }
 }
 
-function renderHtml(matches, error, cachedAt) {
+function renderHtml(matches, metadata = {}) {
+  const error = metadata.error || null;
+  const lastSuccessfulSyncAt = metadata.lastSuccessfulSyncAt || null;
+  const usedCache = Boolean(metadata.usedCache);
+  const staleCache = Boolean(metadata.staleCache);
+  const dailyUpdateTime = normalizeDailyUpdateTime(metadata.dailyUpdateTime || getConfiguredDailyUpdateTime());
+
   const rows = error
     ? `<p style="color:#f44336">Fout: ${error}</p>`
     : matches
@@ -437,6 +514,9 @@ function renderHtml(matches, error, cachedAt) {
         )
         .join("\n");
 
+  const syncSource = staleCache ? "oude cache" : usedCache ? "cache" : "live";
+  const syncStatus = `Laatst succesvol gesynced: ${formatSyncTimestamp(lastSuccessfulSyncAt)} (${syncSource})`;
+
   return `<!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -453,8 +533,10 @@ function renderHtml(matches, error, cachedAt) {
     <div class="mmm-voetbal-nl">
       <div class="voetbal-title">Laatste Uitslagen – Bilt De FC MO15-2</div>
       <ul class="voetbal-list">${rows}</ul>
+      <div class="voetbal-sync-meta dimmed xsmall">${syncStatus}</div>
+      ${error ? `<div class="voetbal-sync-error dimmed xsmall">Laatste refresh mislukte: ${error}</div>` : ""}
     </div>
-    <p class="meta">${cachedAt ? `Cache van ${cachedAt}` : "Live data"} · <a href="/" style="color:#555">verversen</a> · <a href="/?force" style="color:#555">forceer refresh</a></p>
+    <p class="meta">Dagelijkse sync: ${dailyUpdateTime} · standaard max wedstrijden: ${getConfiguredMaxMatches()} · <a href="/" style="color:#555">verversen</a> · <a href="/?force" style="color:#555">forceer refresh</a></p>
   </div>
 </body>
 </html>`;
@@ -468,28 +550,65 @@ const server = http.createServer(async (req, res) => {
   }
 
   const forceRefresh = req.url === "/?force";
+  const dailyUpdateTime = getConfiguredDailyUpdateTime();
+  const maxMatches = getConfiguredMaxMatches();
   const cached = readCache();
 
-  if (!forceRefresh && cached && isCacheValid(cached.cachedAt)) {
+  if (!forceRefresh && cached && isCacheValid(cached.cachedAt, dailyUpdateTime)) {
     const cachedTime = new Date(cached.cachedAt).toLocaleString("nl-NL");
     console.log(`Cache gebruikt (${cachedTime})`);
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(renderHtml(cached.matches, null, cachedTime));
+    const matches = sortMatchesNewestFirst(cached.matches).slice(0, maxMatches);
+    res.end(
+      renderHtml(matches, {
+        lastSuccessfulSyncAt: cached.lastSuccessfulSyncAt || cached.cachedAt,
+        usedCache: true,
+        dailyUpdateTime,
+      })
+    );
     return;
   }
 
   try {
     console.log("Uitslagen ophalen van voetbal.nl...");
-    const matches = await scrapeMatches(null);
-    writeCache(matches);
-    const cachedTime = new Date().toLocaleString("nl-NL");
-    console.log(`${matches.length} wedstrijd(en) gevonden, cache opgeslagen`);
+    const allMatches = await scrapeMatches(null);
+    const syncTimestamp = Date.now();
+    writeCache(allMatches, dailyUpdateTime, syncTimestamp);
+    const matches = allMatches.slice(0, maxMatches);
+    console.log(`${allMatches.length} wedstrijd(en) gevonden, cache opgeslagen`);
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(renderHtml(matches, null, cachedTime));
+    res.end(
+      renderHtml(matches, {
+        lastSuccessfulSyncAt: syncTimestamp,
+        usedCache: false,
+        dailyUpdateTime,
+      })
+    );
   } catch (err) {
     console.error("Fout:", err.message);
+    if (cached && Array.isArray(cached.matches) && cached.matches.length > 0) {
+      console.log("Fallback naar bestaande cache na scrape-fout");
+      const matches = sortMatchesNewestFirst(cached.matches).slice(0, maxMatches);
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(
+        renderHtml(matches, {
+          error: err.message,
+          lastSuccessfulSyncAt: cached.lastSuccessfulSyncAt || cached.cachedAt,
+          usedCache: true,
+          staleCache: true,
+          dailyUpdateTime,
+        })
+      );
+      return;
+    }
+
     res.writeHead(500, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(renderHtml([], err.message, null));
+    res.end(
+      renderHtml([], {
+        error: err.message,
+        dailyUpdateTime,
+      })
+    );
   }
 });
 

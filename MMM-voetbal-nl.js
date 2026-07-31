@@ -1,16 +1,21 @@
 Module.register("MMM-voetbal-nl", {
   defaults: {
     updateInterval: 60 * 60 * 1000, // elk uur verversen
-    maxMatches: null,
+    maxMatches: 10,
     teamName: "Bilt De FC MO15-2",
     teamId: "T707686914",
     teams: null,
+    dailyUpdateTime: "13:00",
     email: "",
     password: "",
   },
 
   start() {
     this.matches = [];
+    this.lastSuccessfulSyncAt = null;
+    this.usedCache = false;
+    this.staleCache = false;
+    this.syncError = null;
     this.loaded = false;
     this.getData();
     setInterval(() => this.getData(), this.config.updateInterval);
@@ -22,6 +27,7 @@ Module.register("MMM-voetbal-nl", {
       teamName: this.config.teamName,
       teamId: this.config.teamId,
       teams: this.config.teams,
+      dailyUpdateTime: this.config.dailyUpdateTime,
       email: this.config.email,
       password: this.config.password,
     });
@@ -29,9 +35,37 @@ Module.register("MMM-voetbal-nl", {
 
   socketNotificationReceived(notification, payload) {
     if (notification === "MATCHES_RESULT") {
-      this.matches = payload;
+      const data = Array.isArray(payload) ? { matches: payload } : payload || {};
+      this.matches = Array.isArray(data.matches) ? data.matches : [];
+      this.lastSuccessfulSyncAt = typeof data.lastSuccessfulSyncAt === "number" ? data.lastSuccessfulSyncAt : null;
+      this.usedCache = Boolean(data.usedCache);
+      this.staleCache = Boolean(data.staleCache);
+      this.syncError = data.error ? String(data.error) : null;
       this.loaded = true;
       this.updateDom();
+    }
+  },
+
+  formatSyncTimestamp() {
+    if (!this.lastSuccessfulSyncAt) return "onbekend";
+    return new Intl.DateTimeFormat("nl-NL", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(this.lastSuccessfulSyncAt));
+  },
+
+  appendSyncStatus(wrapper) {
+    const syncMeta = document.createElement("div");
+    syncMeta.className = "voetbal-sync-meta dimmed xsmall";
+    const syncSource = this.staleCache ? "oude cache" : this.usedCache ? "cache" : "live";
+    syncMeta.innerText = `Laatst succesvol gesynced: ${this.formatSyncTimestamp()} (${syncSource})`;
+    wrapper.appendChild(syncMeta);
+
+    if (this.syncError) {
+      const errorMeta = document.createElement("div");
+      errorMeta.className = "voetbal-sync-error dimmed xsmall";
+      errorMeta.innerText = `Laatste refresh mislukte: ${this.syncError}`;
+      wrapper.appendChild(errorMeta);
     }
   },
 
@@ -57,6 +91,7 @@ Module.register("MMM-voetbal-nl", {
       empty.className = "dimmed light small";
       empty.innerText = "Geen uitslagen gevonden.";
       wrapper.appendChild(empty);
+      this.appendSyncStatus(wrapper);
       return wrapper;
     }
 
@@ -116,6 +151,8 @@ Module.register("MMM-voetbal-nl", {
     });
 
     wrapper.appendChild(list);
+    this.appendSyncStatus(wrapper);
+
     return wrapper;
   },
 

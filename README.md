@@ -13,8 +13,9 @@ MagicMirror² module die uitslagen van jouw voetbal.nl-team(s) toont.
   module: "MMM-voetbal-nl",
   position: "top_right",
   config: {
-    maxMatches: null,      // null = alles tonen, of zet een getal
+    maxMatches: 10,        // standaard: laatste 10 wedstrijden
     updateInterval: 3600000,
+    dailyUpdateTime: "13:00", // 1x per dag scores verversen (HH:mm)
     teamName: "Bilt De FC MO15-2",
     teamId: "T707686914",
     email: "jouwemail@voorbeeld.nl",
@@ -31,6 +32,8 @@ config: {
     { name: "Bilt De FC MO15-2", teamId: "T707686914" },
     { name: "Tweede Team", teamId: "T123456789" }
   ],
+  maxMatches: 10,
+  dailyUpdateTime: "13:00",
   email: "jouwemail@voorbeeld.nl",
   password: "jouwwachtwoord"
 }
@@ -44,8 +47,9 @@ Let op: inloggegevens in `config/config.js` zijn leesbaar op het systeem waar Ma
 
 1. Kopieer `local_testing/credentials.example.js` naar `local_testing/credentials.js` en vul je gegevens in
 2. Gebruik `teamName` + `teamId` (bijv. `T707686914`), of meerdere teams via `teams`
-3. Start de testserver: `npm test`
-4. Open http://localhost:3456 in je browser
+3. Optioneel: stel `maxMatches` en `dailyUpdateTime` in voor lokaal testgedrag (standaard `10` en `13:00`)
+4. Start de testserver: `npm test`
+5. Open http://localhost:3456 in je browser
 
 `local_testing/credentials.js` staat in `.gitignore` en wordt nooit meegestuurd naar git.
 
@@ -58,4 +62,12 @@ De scraper:
 
 Voor lokaal testen komen inloggegevens en teamconfiguratie uit `local_testing/credentials.js`.
 In de MagicMirror-omgeving komen ze uit `config/config.js`.
+
+## Cache en sync
+
+- De module bewaart uitslagen in `cache.json` in de modulemap.
+- Bij normale MagicMirror refreshes wordt eerst de lokale cache gebruikt.
+- Er wordt pas opnieuw van voetbal.nl opgehaald na de ingestelde dagelijkse sync-tijd.
+- Standaard is dat `13:00`; aanpasbaar met `dailyUpdateTime` in `HH:mm` formaat.
+- Onderaan de module zie je wanneer voor het laatst succesvol is gesynced.
 

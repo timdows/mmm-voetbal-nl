@@ -99,3 +99,15 @@
 .mmm-voetbal-nl .voetbal-match--draw .voetbal-score {
   color: #ff9800;
 }
+
+.mmm-voetbal-nl .voetbal-sync-meta {
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid #222;
+  color: #777;
+}
+
+.mmm-voetbal-nl .voetbal-sync-error {
+  margin-top: 4px;
+  color: #a35a5a;
+}

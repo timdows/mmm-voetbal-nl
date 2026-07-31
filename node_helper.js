@@ -18,13 +18,51 @@ const DEFAULT_RESULTS_URL = `https://www.voetbal.nl/team/${DEFAULT_TEAM_ID}/uits
 const LOGIN_URL = "https://www.voetbal.nl/inloggen";
 const DEFAULT_TEAM_NAME = "Bilt De FC MO15-2";
 const CACHE_FILE = path.join(__dirname, "cache.json");
+const DEFAULT_DAILY_UPDATE_TIME = "13:00";
 
-function isCacheValid(cachedAt) {
-  const now = Date.now();
-  const d = new Date();
-  const todayNoon = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0).getTime();
-  const lastNoon = now < todayNoon ? todayNoon - 86400000 : todayNoon;
-  return cachedAt >= lastNoon;
+function normalizeDailyUpdateTime(value) {
+  const raw = String(value || "").trim();
+  const match = raw.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+  if (!match) return DEFAULT_DAILY_UPDATE_TIME;
+
+  const hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2] || "0", 10);
+  if (Number.isNaN(hour) || Number.isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return DEFAULT_DAILY_UPDATE_TIME;
+  }
+
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function parseDailyUpdateTime(value) {
+  const normalized = normalizeDailyUpdateTime(value);
+  const [hourPart, minutePart] = normalized.split(":");
+  return {
+    hour: parseInt(hourPart, 10),
+    minute: parseInt(minutePart, 10),
+    normalized,
+  };
+}
+
+function getLastRefreshBoundary(nowTs, dailyUpdateTime) {
+  const { hour, minute } = parseDailyUpdateTime(dailyUpdateTime);
+  const nowDate = new Date(nowTs);
+  const todayBoundary = new Date(
+    nowDate.getFullYear(),
+    nowDate.getMonth(),
+    nowDate.getDate(),
+    hour,
+    minute,
+    0,
+    0
+  ).getTime();
+
+  return nowTs < todayBoundary ? todayBoundary - 86400000 : todayBoundary;
+}
+
+function isCacheValid(cachedAt, dailyUpdateTime, nowTs = Date.now()) {
+  const lastBoundary = getLastRefreshBoundary(nowTs, dailyUpdateTime);
+  return cachedAt >= lastBoundary;
 }
 
 function readCache() {
@@ -36,9 +74,22 @@ function readCache() {
   return null;
 }
 
-function writeCache(matches) {
+function writeCache(matches, dailyUpdateTime, nowTs = Date.now()) {
   try {
-    fs.writeFileSync(CACHE_FILE, JSON.stringify({ cachedAt: Date.now(), matches }, null, 2), "utf8");
+    fs.writeFileSync(
+      CACHE_FILE,
+      JSON.stringify(
+        {
+          cachedAt: nowTs,
+          lastSuccessfulSyncAt: nowTs,
+          dailyUpdateTime: normalizeDailyUpdateTime(dailyUpdateTime),
+          matches,
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
   } catch (_) {}
 }
 
@@ -132,7 +183,7 @@ function mergeCredentials(runtimeConfig) {
   const merged = { ...fileCredentials };
   if (!runtimeConfig || typeof runtimeConfig !== "object") return merged;
 
-  ["email", "password", "teamName", "teamId", "resultsUrl", "resultUrl"].forEach((key) => {
+  ["email", "password", "teamName", "teamId", "resultsUrl", "resultUrl", "dailyUpdateTime"].forEach((key) => {
     const value = runtimeConfig[key];
     if (value !== undefined && value !== null && String(value).trim() !== "") {
       merged[key] = value;
@@ -195,13 +246,31 @@ module.exports = NodeHelper.create({
     }
   },
 
+  sendMatchesResult(matches, metadata = {}) {
+    this.sendSocketNotification("MATCHES_RESULT", {
+      matches,
+      lastSuccessfulSyncAt: metadata.lastSuccessfulSyncAt || null,
+      cacheUpdatedAt: metadata.cacheUpdatedAt || null,
+      usedCache: Boolean(metadata.usedCache),
+      staleCache: Boolean(metadata.staleCache),
+      dailyUpdateTime: normalizeDailyUpdateTime(metadata.dailyUpdateTime),
+      error: metadata.error || null,
+    });
+  },
+
   async scrapeMatches(maxMatches, runtimeConfig) {
     const activeCredentials = mergeCredentials(runtimeConfig);
+    const dailyUpdateTime = normalizeDailyUpdateTime(activeCredentials.dailyUpdateTime);
     const cached = readCache();
-    if (cached && isCacheValid(cached.cachedAt)) {
+    if (cached && isCacheValid(cached.cachedAt, dailyUpdateTime)) {
       console.log("[MMM-voetbal-nl] Cache gebruikt (" + new Date(cached.cachedAt).toLocaleString("nl-NL") + ")");
       const matches = this.limitMatches(cached.matches, maxMatches);
-      this.sendSocketNotification("MATCHES_RESULT", matches);
+      this.sendMatchesResult(matches, {
+        lastSuccessfulSyncAt: cached.lastSuccessfulSyncAt || cached.cachedAt,
+        cacheUpdatedAt: cached.cachedAt,
+        usedCache: true,
+        dailyUpdateTime,
+      });
       return;
     }
 
@@ -247,13 +316,35 @@ module.exports = NodeHelper.create({
 
       const deduped = this.dedupeMatches(allMatches);
       const sorted = this.limitMatches(deduped, null);
-      writeCache(sorted);
+      const syncTimestamp = Date.now();
+      writeCache(sorted, dailyUpdateTime, syncTimestamp);
       console.log("[MMM-voetbal-nl] Cache opgeslagen (", sorted.length, "wedstrijden)");
       const matches = this.limitMatches(sorted, maxMatches);
-      this.sendSocketNotification("MATCHES_RESULT", matches);
+      this.sendMatchesResult(matches, {
+        lastSuccessfulSyncAt: syncTimestamp,
+        cacheUpdatedAt: syncTimestamp,
+        usedCache: false,
+        dailyUpdateTime,
+      });
     } catch (err) {
       console.error("[MMM-voetbal-nl] Fout bij scrapen:", err.message);
-      this.sendSocketNotification("MATCHES_RESULT", []);
+      if (cached && Array.isArray(cached.matches) && cached.matches.length > 0) {
+        console.log("[MMM-voetbal-nl] Fallback naar bestaande cache na scrape-fout");
+        const matches = this.limitMatches(cached.matches, maxMatches);
+        this.sendMatchesResult(matches, {
+          lastSuccessfulSyncAt: cached.lastSuccessfulSyncAt || cached.cachedAt,
+          cacheUpdatedAt: cached.cachedAt,
+          usedCache: true,
+          staleCache: true,
+          dailyUpdateTime,
+          error: err.message,
+        });
+      } else {
+        this.sendMatchesResult([], {
+          dailyUpdateTime,
+          error: err.message,
+        });
+      }
     } finally {
       if (browser) await browser.close();
     }
