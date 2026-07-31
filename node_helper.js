@@ -1,6 +1,5 @@
 const NodeHelper = require("node_helper");
 const cheerio = require("cheerio");
-const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 
@@ -22,6 +21,20 @@ const DEFAULT_DAILY_UPDATE_TIME = "13:00";
 
 function logPrefix() {
   return `[MMM-voetbal-nl][${new Date().toISOString()}][pid:${process.pid}]`;
+}
+
+let chromiumLauncher = null;
+function getChromiumLauncher() {
+  if (chromiumLauncher) return chromiumLauncher;
+  try {
+    const { chromium } = require("playwright");
+    chromiumLauncher = chromium;
+    return chromiumLauncher;
+  } catch (error) {
+    throw new Error(
+      `Playwright niet beschikbaar. Voer in de modulemap uit: npm install ; npx playwright install chromium (${error.message})`
+    );
+  }
 }
 
 function normalizeDailyUpdateTime(value) {
@@ -304,6 +317,7 @@ module.exports = NodeHelper.create({
     let loginAttempted = false;
     let loginSuccessful = null;
     try {
+      const chromium = getChromiumLauncher();
       browser = await chromium.launch({
         headless: true,
         args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],

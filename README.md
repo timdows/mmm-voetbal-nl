@@ -15,9 +15,11 @@ cd ~/MagicMirror/modules
 git clone <jouw-repo-url> MMM-voetbal-nl
 cd MMM-voetbal-nl
 npm install
+npx playwright install chromium
 ```
 
 `npm install` is verplicht na `git clone`. Zonder dependencies (zoals `playwright` en `cheerio`) start `node_helper.js` niet.
+Met Playwright moet je ook eenmaal de browser installeren via `npx playwright install chromium`.
 
 ```js
 {
@@ -85,4 +87,5 @@ In de MagicMirror-omgeving komen ze uit `config/config.js`.
 ## Troubleshooting
 
 - Geen logs van `MMM-voetbal-nl` zichtbaar? Controleer eerst of je in de modulemap `npm install` hebt uitgevoerd.
+- Start de scraper niet? Voer ook `npx playwright install chromium` uit.
 
