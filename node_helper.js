@@ -20,6 +20,10 @@ const DEFAULT_TEAM_NAME = "Bilt De FC MO15-2";
 const CACHE_FILE = path.join(__dirname, "cache.json");
 const DEFAULT_DAILY_UPDATE_TIME = "13:00";
 
+function logPrefix() {
+  return `[MMM-voetbal-nl][${new Date().toISOString()}][pid:${process.pid}]`;
+}
+
 function normalizeDailyUpdateTime(value) {
   const raw = String(value || "").trim();
   const match = raw.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
@@ -245,11 +249,17 @@ function extractBackgroundImage(value) {
 
 module.exports = NodeHelper.create({
   start() {
-    console.log("[MMM-voetbal-nl] Node helper gestart");
+    this.hasLoggedFirstFetch = false;
+    console.log(`${logPrefix()} Node helper gestart`);
+    console.log(`${logPrefix()} Modulepad: ${__dirname}`);
   },
 
   socketNotificationReceived(notification, payload) {
     if (notification === "FETCH_MATCHES") {
+      if (!this.hasLoggedFirstFetch) {
+        this.hasLoggedFirstFetch = true;
+        console.log(`${logPrefix()} Eerste FETCH_MATCHES ontvangen`);
+      }
       this.scrapeMatches(payload.maxMatches, payload);
     }
   },
