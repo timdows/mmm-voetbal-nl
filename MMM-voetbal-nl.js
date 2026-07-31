@@ -198,6 +198,6 @@ Module.register("MMM-voetbal-nl", {
   },
 
   getStyles() {
-    return ["mmm-voetbal-nl.css"];
+    return ["MMM-voetbal-nl.css"];
   },
 });
