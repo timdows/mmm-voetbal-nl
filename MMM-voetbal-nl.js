@@ -77,8 +77,8 @@ Module.register("MMM-voetbal-nl", {
   },
 
   getLoginStatusText() {
-    if (!this.loginAttempted) return "Inloggen: niet gebruikt";
-    if (this.loginSuccessful === true) return "Inloggen: gelukt";
+    if (!this.loginAttempted) return null;
+    if (this.loginSuccessful === true) return null;
     if (this.loginSuccessful === false) return "Inloggen: mislukt";
     return "Inloggen: onbekend";
   },
@@ -105,18 +105,27 @@ Module.register("MMM-voetbal-nl", {
     const syncMeta = document.createElement("div");
     syncMeta.className = "voetbal-sync-meta dimmed xsmall";
     const syncSource = this.staleCache ? "oude cache" : this.usedCache ? "cache" : "live";
-    syncMeta.innerText = `Laatst succesvol gesynced: ${this.formatSyncTimestamp()} (${syncSource})`;
+    if (this.lastSuccessfulSyncAt) {
+      syncMeta.innerText = `Laatst succesvol gesynced: ${this.formatSyncTimestamp()} (${syncSource})`;
+    } else {
+      syncMeta.innerText = "Nog niet succesvol gesynced";
+    }
     wrapper.appendChild(syncMeta);
 
-    const loginMeta = document.createElement("div");
-    loginMeta.className = "voetbal-login-meta dimmed xsmall";
-    loginMeta.innerText = this.getLoginStatusText();
-    wrapper.appendChild(loginMeta);
+    const loginStatusText = this.getLoginStatusText();
+    if (loginStatusText) {
+      const loginMeta = document.createElement("div");
+      loginMeta.className = "voetbal-login-meta dimmed xsmall";
+      loginMeta.innerText = loginStatusText;
+      wrapper.appendChild(loginMeta);
+    }
 
-    if (this.syncError) {
+    if (this.syncError || !this.lastSuccessfulSyncAt) {
       const errorMeta = document.createElement("div");
       errorMeta.className = "voetbal-sync-error dimmed xsmall";
-      errorMeta.innerText = `Laatste refresh mislukte: ${this.syncError}`;
+      errorMeta.innerText = this.syncError
+        ? `Laatste refresh mislukte: ${this.syncError}`
+        : "Synchronisatie is nog niet gelukt.";
       wrapper.appendChild(errorMeta);
     }
   },
