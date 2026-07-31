@@ -2,17 +2,7 @@
   font-family: inherit;
   text-align: left;
   min-width: 300px;
-}
-
-.mmm-voetbal-nl .voetbal-title {
-  font-size: 0.85em;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #aaa;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #444;
-  padding-bottom: 4px;
+  margin-top: 4px;
 }
 
 .mmm-voetbal-nl .voetbal-list {

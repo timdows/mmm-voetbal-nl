@@ -26,6 +26,7 @@ Met Playwright moet je ook eenmaal de browser installeren via `npx playwright in
   module: "MMM-voetbal-nl",
   position: "top_right",
   config: {
+    title: "Laatste Uitslagen",
     maxMatches: 10,        // standaard: laatste 10 wedstrijden
     updateInterval: 3600000,
     dailyUpdateTime: "13:00", // 1x per dag scores verversen (HH:mm)
@@ -41,6 +42,7 @@ Je kunt ook meerdere teams instellen:
 
 ```js
 config: {
+  title: "Mijn Voetbalmodule",
   teams: [
     { name: "Bilt De FC MO15-2", teamId: "T707686914" },
     { name: "Tweede Team", teamId: "T123456789" }
@@ -53,6 +55,8 @@ config: {
 ```
 
 `teamId` is voldoende. De module bouwt zelf de juiste voetbal.nl uitslagen-URL.
+Als `title` leeg is, gebruikt de module automatisch `Laatste Uitslagen - <teamnaam>`.
+De `title` wordt als MagicMirror module-header getoond (zelfde principe als `MMM-Parro-NL`).
 
 Let op: inloggegevens in `config/config.js` zijn leesbaar op het systeem waar MagicMirror draait.
 

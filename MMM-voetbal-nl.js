@@ -2,6 +2,7 @@ Module.register("MMM-voetbal-nl", {
   defaults: {
     updateInterval: 60 * 60 * 1000, // elk uur verversen
     maxMatches: 10,
+    title: "",
     teamName: "Bilt De FC MO15-2",
     teamId: "T707686914",
     teams: null,
@@ -90,6 +91,16 @@ Module.register("MMM-voetbal-nl", {
     }).format(new Date(this.lastSuccessfulSyncAt));
   },
 
+  getConfiguredTitle() {
+    const configuredTitle = String(this.config.title || "").trim();
+    if (configuredTitle) return configuredTitle;
+    return `Laatste Uitslagen - ${this.config.teamName}`;
+  },
+
+  getHeader() {
+    return this.getConfiguredTitle();
+  },
+
   appendSyncStatus(wrapper) {
     const syncMeta = document.createElement("div");
     syncMeta.className = "voetbal-sync-meta dimmed xsmall";
@@ -113,11 +124,6 @@ Module.register("MMM-voetbal-nl", {
   getDom() {
     const wrapper = document.createElement("div");
     wrapper.className = "mmm-voetbal-nl";
-
-    const title = document.createElement("div");
-    title.className = "voetbal-title";
-    title.innerText = `Laatste Uitslagen - ${this.config.teamName}`;
-    wrapper.appendChild(title);
 
     if (!this.loaded) {
       const loading = document.createElement("div");
