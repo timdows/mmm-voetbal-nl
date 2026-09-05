@@ -38,8 +38,12 @@
 
 .mmm-voetbal-nl .voetbal-team {
   flex: 1;
+  min-width: 0;
   font-size: 0.9em;
   color: #ddd;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mmm-voetbal-nl .voetbal-team--home {
