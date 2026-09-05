@@ -495,11 +495,9 @@ function renderHtml(matches, metadata = {}) {
   const staleCache = Boolean(metadata.staleCache);
   const dailyUpdateTime = normalizeDailyUpdateTime(metadata.dailyUpdateTime || getConfiguredDailyUpdateTime());
 
-  const rows = error
-    ? `<p style="color:#f44336">Fout: ${error}</p>`
-    : matches
-        .map(
-          (m) => `
+  const rows = matches
+    .map(
+      (m) => `
       <li class="voetbal-match voetbal-match--${m.won}">
         <span class="voetbal-date">${m.date}${m.round ? ` · ${m.round}` : ""}</span>
         <div class="voetbal-score-row">
@@ -512,8 +510,8 @@ function renderHtml(matches, metadata = {}) {
           <span class="voetbal-team voetbal-team--away">${m.awayTeam}</span>
         </div>
       </li>`
-        )
-        .join("\n");
+    )
+    .join("\n");
 
   const syncSource = staleCache ? "oude cache" : usedCache ? "cache" : "live";
   const syncStatus = `Laatst succesvol gesynced: ${formatSyncTimestamp(lastSuccessfulSyncAt)} (${syncSource})`;
@@ -555,7 +553,7 @@ const server = http.createServer(async (req, res) => {
   const maxMatches = getConfiguredMaxMatches();
   const cached = readCache();
 
-  if (!forceRefresh && cached && isCacheValid(cached.cachedAt, dailyUpdateTime)) {
+  if (!forceRefresh && cached && cached.matches.length > 0 && isCacheValid(cached.cachedAt, dailyUpdateTime)) {
     const cachedTime = new Date(cached.cachedAt).toLocaleString("nl-NL");
     console.log(`Cache gebruikt (${cachedTime})`);
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
@@ -573,6 +571,9 @@ const server = http.createServer(async (req, res) => {
   try {
     console.log("Uitslagen ophalen van voetbal.nl...");
     const allMatches = await scrapeMatches(null);
+    if (allMatches.length === 0) {
+      throw new Error("Geen uitslagen ontvangen van voetbal.nl; bestaande cache blijft behouden");
+    }
     const syncTimestamp = Date.now();
     writeCache(allMatches, dailyUpdateTime, syncTimestamp);
     const matches = allMatches.slice(0, maxMatches);

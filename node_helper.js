@@ -298,7 +298,7 @@ module.exports = NodeHelper.create({
     const activeCredentials = mergeCredentials(runtimeConfig);
     const dailyUpdateTime = normalizeDailyUpdateTime(activeCredentials.dailyUpdateTime);
     const cached = readCache();
-    if (cached && isCacheValid(cached.cachedAt, dailyUpdateTime)) {
+    if (cached && cached.matches.length > 0 && isCacheValid(cached.cachedAt, dailyUpdateTime)) {
       console.log("[MMM-voetbal-nl] Cache gebruikt (" + new Date(cached.cachedAt).toLocaleString("nl-NL") + ")");
       const matches = this.limitMatches(cached.matches, maxMatches);
       this.sendMatchesResult(matches, {
@@ -370,6 +370,9 @@ module.exports = NodeHelper.create({
 
       const deduped = this.dedupeMatches(allMatches);
       const sorted = this.limitMatches(deduped, null);
+      if (sorted.length === 0) {
+        throw new Error("Geen uitslagen ontvangen van voetbal.nl; bestaande cache blijft behouden");
+      }
       const syncTimestamp = Date.now();
       writeCache(sorted, dailyUpdateTime, syncTimestamp, { loginAttempted, loginSuccessful });
       console.log("[MMM-voetbal-nl] Cache opgeslagen (", sorted.length, "wedstrijden)");
