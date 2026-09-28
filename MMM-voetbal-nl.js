@@ -93,10 +93,25 @@ Module.register("MMM-voetbal-nl", {
 
   formatSyncTimestamp() {
     if (!this.lastSuccessfulSyncAt) return "onbekend";
-    return new Intl.DateTimeFormat("nl-NL", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(this.lastSuccessfulSyncAt));
+    const syncDate = new Date(this.lastSuccessfulSyncAt);
+    const date = new Intl.DateTimeFormat("nl-NL", {
+      day: "numeric",
+      month: "short",
+    })
+      .format(syncDate)
+      .replace(".", "");
+    const time = new Intl.DateTimeFormat("nl-NL", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(syncDate);
+    return `${date} ${time}`;
+  },
+
+  formatMatchDate(value) {
+    const raw = String(value || "").toLowerCase();
+    const match = raw.match(/(\d{1,2})\s+([a-zà-ÿ]+)/i);
+    if (!match) return String(value || "");
+    return `${match[1]} ${match[2].slice(0, 3)}`;
   },
 
   getConfiguredTitle() {
@@ -114,7 +129,7 @@ Module.register("MMM-voetbal-nl", {
     syncMeta.className = "voetbal-sync-meta dimmed xsmall";
     const syncSource = this.staleCache ? "oude cache" : this.usedCache ? "cache" : "live";
     if (this.lastSuccessfulSyncAt) {
-      syncMeta.innerText = `Laatst succesvol gesynced: ${this.formatSyncTimestamp()} (${syncSource})`;
+      syncMeta.innerText = `Sync ${this.formatSyncTimestamp()} · ${syncSource}`;
     } else {
       syncMeta.innerText = "Nog niet succesvol gesynced";
     }
@@ -168,7 +183,8 @@ Module.register("MMM-voetbal-nl", {
 
       const dateEl = document.createElement("span");
       dateEl.className = "voetbal-date";
-      dateEl.innerText = match.date + (match.round ? ` · ${match.round}` : "");
+      dateEl.innerText = this.formatMatchDate(match.date);
+      dateEl.title = [match.date, match.round].filter(Boolean).join(" · ");
 
       const scoreRow = document.createElement("div");
       scoreRow.className = "voetbal-score-row";

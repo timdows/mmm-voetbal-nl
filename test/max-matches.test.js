@@ -57,3 +57,8 @@ test("frontend enforces maxMatches on received results", () => {
   instance.socketNotificationReceived("MATCHES_RESULT", matches);
   assert.equal(instance.matches.length, 2);
 });
+
+test("frontend formats a match date as a compact day and month", () => {
+  const frontend = loadFrontend();
+  assert.equal(frontend.formatMatchDate("Zaterdag 26 september 2026"), "26 sep");
+});
