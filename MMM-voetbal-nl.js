@@ -39,7 +39,7 @@ Module.register("MMM-voetbal-nl", {
   socketNotificationReceived(notification, payload) {
     if (notification === "MATCHES_RESULT") {
       const data = Array.isArray(payload) ? { matches: payload } : payload || {};
-      this.matches = Array.isArray(data.matches) ? data.matches : [];
+      this.matches = this.limitMatches(data.matches);
       if (typeof data.lastSuccessfulSyncAt === "number") {
         this.lastSuccessfulSyncAt = data.lastSuccessfulSyncAt;
       }
@@ -74,6 +74,14 @@ Module.register("MMM-voetbal-nl", {
         this.updateDom();
       }
     }
+  },
+
+  limitMatches(matches) {
+    if (!Array.isArray(matches)) return [];
+    const parsed = Number(this.config.maxMatches);
+    if (!Number.isFinite(parsed)) return matches;
+    const limit = Math.floor(parsed);
+    return limit > 0 ? matches.slice(0, limit) : matches;
   },
 
   getLoginStatusText() {

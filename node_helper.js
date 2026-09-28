@@ -51,6 +51,13 @@ function normalizeDailyUpdateTime(value) {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
+function normalizeMaxMatches(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  const normalized = Math.floor(parsed);
+  return normalized > 0 ? normalized : null;
+}
+
 function parseDailyUpdateTime(value) {
   const normalized = normalizeDailyUpdateTime(value);
   const [hourPart, minutePart] = normalized.split(":");
@@ -273,7 +280,8 @@ module.exports = NodeHelper.create({
         this.hasLoggedFirstFetch = true;
         console.log(`${logPrefix()} Eerste FETCH_MATCHES ontvangen`);
       }
-      this.scrapeMatches(payload.maxMatches, payload);
+      const runtimeConfig = payload && typeof payload === "object" ? payload : {};
+      this.scrapeMatches(runtimeConfig.maxMatches, runtimeConfig);
     }
   },
 
@@ -600,8 +608,9 @@ module.exports = NodeHelper.create({
       return (b.round || "").localeCompare(a.round || "", "nl-NL", { numeric: true });
     });
 
-    if (typeof maxMatches === "number" && maxMatches > 0) {
-      return sorted.slice(0, maxMatches);
+    const limit = normalizeMaxMatches(maxMatches);
+    if (limit !== null) {
+      return sorted.slice(0, limit);
     }
     return sorted;
   },

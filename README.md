@@ -55,6 +55,7 @@ config: {
 ```
 
 `teamId` is voldoende. De module bouwt zelf de juiste voetbal.nl uitslagen-URL.
+`maxMatches` bepaalt hoeveel uitslagen zichtbaar zijn. Zowel `2` als `"2"` wordt geaccepteerd; gebruik een positief getal.
 Als `title` leeg is, gebruikt de module automatisch `Laatste Uitslagen - <teamnaam>`.
 De `title` wordt als MagicMirror module-header getoond (zelfde principe als `MMM-Parro-NL`).
 

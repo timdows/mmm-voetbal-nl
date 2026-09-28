@@ -4,7 +4,8 @@
   "description": "MagicMirror² module: toont komende Nederlandse voetbalwedstrijden",
   "main": "node_helper.js",
   "scripts": {
-    "test": "node local_testing/test-server.js"
+    "test": "node local_testing/test-server.js",
+    "test:unit": "node --test test/*.test.js"
   },
   "keywords": [
     "magicmirror",
